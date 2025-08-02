@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AppleCare Cost Calculator</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts - Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f5f5f7; /* Apple-like light gray background */
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align to top for better scrolling */
+            min-height: 100vh;
+            padding: 2rem 1rem;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 1.5rem; /* More rounded corners */
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08); /* Softer shadow */
+            padding: 2.5rem;
+            max-width: 900px;
+            width: 100%;
+            margin-top: 2rem;
+            margin-bottom: 2rem;
+        }
+        h1 {
+            color: #1d1d1f; /* Apple's dark text color */
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        h2 {
+            color: #1d1d1f;
+            font-weight: 600;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid #e8e8ed; /* Subtle separator */
+            padding-bottom: 0.5rem;
+        }
+        .device-category {
+            margin-bottom: 1.5rem;
+        }
+        .device-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #f0f0f5; /* Lighter separator for items */
+        }
+        .device-item:last-child {
+            border-bottom: none;
+        }
+        .device-item input[type="checkbox"] {
+            margin-right: 1rem;
+            width: 1.25rem;
+            height: 1.25rem;
+            accent-color: #007aff; /* Apple blue */
+            border-radius: 0.25rem;
+        }
+        .device-item label {
+            flex-grow: 1;
+            color: #333;
+            font-size: 1rem;
+        }
+        .device-item .price {
+            color: #555;
+            font-size: 0.9rem;
+            min-width: 6rem; /* Ensure price column aligns */
+            text-align: right;
+        }
+        .calculate-button {
+            background-color: #007aff; /* Apple blue */
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 9999px; /* Pill shape */
+            font-weight: 600;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+            display: block;
+            margin: 2.5rem auto 0 auto; /* Center button */
+            border: none;
+        }
+        .calculate-button:hover {
+            background-color: #0060df; /* Darker blue on hover */
+        }
+        .results-section {
+            margin-top: 2.5rem;
+            padding-top: 2rem;
+            border-top: 1px solid #e8e8ed;
+            text-align: center;
+        }
+        .grid-3-cols {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* Responsive 3 columns */
+            gap: 1.5rem;
+        }
+        @media (min-width: 768px) {
+            .grid-3-cols {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        .result-box {
+            background-color: #f8f8fa;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+            position: relative; /* Needed for absolute positioning of badge */
+            display: flex; /* Make it a flex container */
+            flex-direction: column; /* Stack children vertically */
+            justify-content: flex-start; /* Align content to the top */
+            min-height: 180px; /* Adjusted min-height after content removal */
+            padding-bottom: 3rem; /* Make space for the badge */
+        }
+        .result-box .total-cost {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #007aff;
+            margin-top: 0; /* No top margin for the first element */
+            margin-bottom: 0; /* Remove default paragraph margin */
+            line-height: 1.2; /* Tighter line height for large text */
+        }
+        .result-box .per-month-text {
+            font-size: 0.9rem;
+            color: #555;
+            margin-top: 0;
+            margin-bottom: 1rem; /* Space below "per month" */
+        }
+        .result-box h3 {
+            font-size: 1.1rem; /* Slightly smaller font than before */
+            font-weight: 600;
+            margin-top: 0;
+            margin-bottom: 0.5rem; /* Space below h3 */
+            color: #1d1d1f;
+        }
+        .result-box p { /* This targets the remaining descriptive p tags if any, though they are removed */
+            font-size: 1.1rem;
+            color: #333;
+            margin-bottom: 0.5rem; /* Consistent margin for paragraphs */
+            line-height: 1.4; /* Consistent line height */
+        }
+        .savings-message {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-top: 2rem;
+            padding: 1rem;
+            border-radius: 0.75rem;
+        }
+        .savings-message.positive {
+            background-color: #e6ffe6; /* Light green */
+            color: #28a745; /* Darker green */
+        }
+        .savings-message.negative {
+            background-color: #ffe6e6; /* Light red */
+            color: #dc3545; /* Darker red */
+        }
+        .savings-message.neutral {
+            background-color: #f0f0f5; /* Neutral gray */
+            color: #555;
+        }
+        .emoji {
+            margin-right: 0.5rem;
+        }
+        .best-option-badge {
+            position: absolute;
+            bottom: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #28a745; /* Green */
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 9999px; /* Pill shape */
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .applecare-logo {
+            display: block;
+            margin: 0 auto 1.5rem auto; /* Center the image and add bottom margin */
+            max-width: 250px; /* Max width for larger screens */
+            width: 80%; /* Fluid width for responsiveness */
+            height: auto;
+        }
+        /* Styles for breakdown sections */
+        .breakdown-box {
+            text-align: left;
+            border: 1px solid #e8e8ed;
+            box-shadow: none; /* Remove inner shadow for these boxes */
+        }
+        .breakdown-box h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        .breakdown-box ul {
+            padding-left: 1.5rem; /* Indent list items */
+            margin-bottom: 0.5rem;
+        }
+        .breakdown-box li {
+            margin-bottom: 0.25rem;
+            font-size: 0.95rem;
+            color: #444;
+        }
+        .breakdown-box p.font-semibold {
+            margin-top: 1rem;
+            border-top: 1px dashed #f0f0f5;
+            padding-top: 0.5rem;
+        }
+        .breakdown-box div p.font-medium {
+            margin-bottom: 0.5rem;
+            margin-top: 1rem;
+            color: #1d1d1f;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Replaced h1 with img for AppleCare logo -->
+        <img src="https://www.apple.com/v/applecare/a/images/overview/hero/logo_apple_care__ethb3t26w2ye_large_2x.png"
+             alt="AppleCare Logo"
+             class="applecare-logo">
+
+        <p class="text-center text-gray-600 mb-8">Select the devices you want to cover to compare AppleCare One and individual AppleCare+ plans.</p>
+
+        <div id="device-selection">
+            <!-- Device categories will be dynamically loaded here -->
+        </div>
+
+        <button id="calculate-btn" class="calculate-button">Calculate Best Option</button>
+
+        <div id="results" class="results-section hidden">
+            <div class="grid-3-cols">
+                <div class="result-box" id="individual-plan-box">
+                    <p class="total-cost" id="individual-cost">$0.00</p>
+                    <p class="per-month-text">per month</p>
+                    <h3 id="individual-plan-name">AppleCare+</h3>
+                </div>
+                <div class="result-box" id="applecare-one-box">
+                    <p class="total-cost" id="applecare-one-cost">$0.00</p>
+                    <p class="per-month-text">per month</p>
+                    <h3>AppleCare One</h3>
+                </div>
+                <div class="result-box" id="hybrid-plan-box">
+                    <p class="total-cost" id="hybrid-cost">$0.00</p>
+                    <p class="per-month-text">per month</p>
+                    <h3>Hybrid Plan</h3>
+                </div>
+            </div>
+            <div id="savings-message" class="savings-message mt-8 hidden"></div>
+
+            <!-- Cost Breakdown Section -->
+            <div id="breakdowns-section" class="mt-8 hidden">
+                <h2 class="text-left mb-4">Cost Breakdowns</h2>
+
+                <div id="individual-breakdown" class="breakdown-box p-4 rounded-lg bg-white mb-4 shadow-sm">
+                    <h3 class="text-left text-lg font-semibold mb-2">AppleCare+ Breakdown</h3>
+                    <ul id="individual-list" class="list-disc list-inside text-left text-gray-700">
+                        <!-- Items will be inserted here -->
+                    </ul>
+                    <p class="text-left font-semibold mt-2">Total: <span id="individual-breakdown-total">$0.00</span></p>
+                </div>
+
+                <div id="applecare-one-breakdown" class="breakdown-box p-4 rounded-lg bg-white mb-4 shadow-sm">
+                    <h3 class="text-left text-lg font-semibold mb-2">AppleCare One Breakdown</h3>
+                    <div id="applecare-one-base-devices" class="mb-2">
+                        <p class="font-medium text-gray-800">Covered by AppleCare One Base ($19.99/month):</p>
+                        <ul id="applecare-one-base-list" class="list-disc list-inside text-left text-gray-700 ml-4">
+                            <!-- Base devices -->
+                        </ul>
+                    </div>
+                    <div id="applecare-one-additional-devices" class="mb-2">
+                        <p class="font-medium text-gray-800">Additional Devices ($5.99/month each):</p>
+                        <ul id="applecare-one-additional-list" class="list-disc list-inside text-left text-gray-700 ml-4">
+                            <!-- Additional devices -->
+                        </ul>
+                    </div>
+                    <p class="text-left font-semibold mt-2">Total: <span id="applecare-one-breakdown-total">$0.00</span></p>
+                </div>
+
+                <div id="hybrid-breakdown" class="breakdown-box p-4 rounded-lg bg-white mb-4 shadow-sm">
+                    <h3 class="text-left text-lg font-semibold mb-2">Hybrid Plan Breakdown</h3>
+                    <div id="hybrid-base-devices" class="mb-2">
+                        <p class="font-medium text-gray-800">Covered by AppleCare One Base ($19.99/month):</p>
+                        <ul id="hybrid-base-list" class="list-disc list-inside text-left text-gray-700 ml-4">
+                            <!-- Hybrid base devices -->
+                        </ul>
+                    </div>
+                    <div id="hybrid-individual-devices" class="mb-2">
+                        <p class="font-medium text-gray-800">Covered by Individual AppleCare+:</p>
+                        <ul id="hybrid-individual-list" class="list-disc list-inside text-left text-gray-700 ml-4">
+                            <!-- Hybrid individual devices -->
+                        </ul>
+                    </div>
+                    <p class="text-left font-semibold mt-2">Total: <span id="hybrid-breakdown-total">$0.00</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Device pricing data
+        const deviceData = {
+            "iPhone": [
+                { model: "iPhone 16e", monthly: 9.99, annually: 99.99 },
+                { model: "iPhone 16, iPhone 15", monthly: 11.99, annually: 119.99 },
+                { model: "iPhone 16 Plus, iPhone 15 Plus", monthly: 12.99, annually: 129.99 },
+                { model: "iPhone 16 Pro, iPhone 16 Pro Max", monthly: 13.99, annually: 139.99 }
+            ],
+            "Mac": [
+                { model: "Mac mini", monthly: 3.49, annually: 34.99 },
+                { model: "Mac Studio", monthly: 5.99, annually: 59.99 },
+                { model: "iMac", monthly: 5.99, annually: 59.99 },
+                { model: "MacBook Air 13-inch", monthly: 6.99, annually: 69.99 },
+                { model: "MacBook Air 15-inch", monthly: 7.99, annually: 79.99 },
+                { model: "MacBook Pro 14-inch", monthly: 9.99, annually: 99.99 },
+                { model: "MacBook Pro 16-inch", monthly: 14.99, annually: 149.99 },
+                { model: "Mac Pro", monthly: 17.99, annually: 179.99 }
+            ],
+            "Displays": [
+                { model: "Apple Studio Display", monthly: 4.99, annually: 49.99 },
+                { model: "Pro Display XDR", monthly: 17.99, annually: 179.99 }
+            ],
+            "iPad": [
+                { model: "iPad, iPad mini", monthly: 4.99, annually: 49.99 },
+                { model: "iPad Air 11-inch (M3)", monthly: 5.99, annually: 59.99 },
+                { model: "iPad Air 13-inch (M3)", monthly: 6.99, annually: 69.99 },
+                { model: "iPad Pro 11-inch (M4)", monthly: 9.99, annually: 99.99 },
+                { model: "iPad Pro 13-inch (M4)", monthly: 10.99, annually: 109.99 }
+            ],
+            "Watch": [
+                { model: "Apple Watch SE", monthly: 2.99, annually: 29.99 },
+                { model: "Apple Watch Series 10", monthly: 4.99, annually: 49.99 },
+                { model: "Apple Watch Ultra 2", monthly: 5.99, annually: 59.99 },
+                { model: "Apple Watch Hermès", monthly: 5.99, annually: 59.99 },
+                { model: "Apple Watch Hermès Ultra", monthly: 5.99, annually: 59.99 }
+            ],
+            "Apple Vision Pro": [
+                { model: "Apple Vision Pro", monthly: 24.99, annually: 249.99 }
+            ],
+            "Headphones": [
+                { model: "AirPods, AirPods Pro, Beats", monthly: 1.49, annually: 14.99 },
+                { model: "AirPods Max", monthly: 2.99, annually: 29.99 }
+            ],
+            "Apple TV": [
+                { model: "Apple TV", monthly: null, annually: 9.99 } // Monthly is blank
+            ],
+            "HomePod": [
+                { model: "HomePod mini", monthly: null, annually: 9.99 }, // Monthly is blank
+                { model: "HomePod", monthly: null, annually: 19.99 } // Monthly is blank
+            ]
+        };
+
+        // Constants for AppleCare One pricing
+        const APPLECARE_ONE_BASE_COST = 19.99; // for up to 3 devices
+        const APPLECARE_ONE_ADDITIONAL_DEVICE_COST = 5.99;
+
+        const deviceSelectionDiv = document.getElementById('device-selection');
+        const calculateBtn = document.getElementById('calculate-btn');
+        const resultsDiv = document.getElementById('results');
+
+        const individualPlanBox = document.getElementById('individual-plan-box');
+        const individualCostSpan = document.getElementById('individual-cost');
+        const individualPlanNameH3 = document.getElementById('individual-plan-name');
+
+        const applecareOneBox = document.getElementById('applecare-one-box');
+        const applecareOneCostSpan = document.getElementById('applecare-one-cost');
+
+        const hybridPlanBox = document.getElementById('hybrid-plan-box');
+        const hybridCostSpan = document.getElementById('hybrid-cost');
+
+        const savingsMessageDiv = document.getElementById('savings-message');
+
+        // Breakdown section elements
+        const breakdownsSection = document.getElementById('breakdowns-section');
+        const individualList = document.getElementById('individual-list');
+        const individualBreakdownTotal = document.getElementById('individual-breakdown-total');
+        const applecareOneBaseList = document.getElementById('applecare-one-base-list');
+        const applecareOneAdditionalList = document.getElementById('applecare-one-additional-list');
+        const applecareOneBreakdownTotal = document.getElementById('applecare-one-breakdown-total');
+        const hybridBaseList = document.getElementById('hybrid-base-list');
+        const hybridIndividualList = document.getElementById('hybrid-individual-list');
+        const hybridBreakdownTotal = document.getElementById('hybrid-breakdown-total');
+
+
+        /**
+         * Dynamically generates the device selection checkboxes based on the deviceData.
+         */
+        function renderDeviceSelection() {
+            for (const category in deviceData) {
+                const categoryDiv = document.createElement('div');
+                categoryDiv.classList.add('device-category');
+
+                const categoryHeading = document.createElement('h2');
+                categoryHeading.textContent = category;
+                categoryDiv.appendChild(categoryHeading);
+
+                deviceData[category].forEach((device, index) => {
+                    const deviceItemDiv = document.createElement('div');
+                    deviceItemDiv.classList.add('device-item');
+
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.id = `${category.replace(/\s/g, '-')}-${index}`;
+                    checkbox.value = JSON.stringify(device);
+
+                    const label = document.createElement('label');
+                    label.htmlFor = checkbox.id;
+                    label.textContent = device.model;
+
+                    const priceSpan = document.createElement('span');
+                    priceSpan.classList.add('price');
+                    priceSpan.textContent = device.monthly !== null ? `$${device.monthly.toFixed(2)}/mo` : 'N/A (Monthly)';
+
+                    deviceItemDiv.appendChild(checkbox);
+                    deviceItemDiv.appendChild(label);
+                    deviceItemDiv.appendChild(priceSpan);
+                    categoryDiv.appendChild(deviceItemDiv);
+                });
+                deviceSelectionDiv.appendChild(categoryDiv);
+            }
+        }
+
+        /**
+         * Removes any existing "Best Option" badges from the result boxes.
+         */
+        function clearBestOptionBadges() {
+            const existingBadges = document.querySelectorAll('.best-option-badge');
+            existingBadges.forEach(badge => badge.remove());
+        }
+
+        /**
+         * Adds a "Best Option" badge to the specified result box.
+         * @param {HTMLElement} boxElement - The HTML element of the result box.
+         */
+        function addBestOptionBadge(boxElement) {
+            const badge = document.createElement('div');
+            badge.classList.add('best-option-badge');
+            badge.textContent = 'Best Option';
+            boxElement.appendChild(badge);
+        }
+
+        /**
+         * Clears all breakdown lists.
+         */
+        function clearBreakdownLists() {
+            individualList.innerHTML = '';
+            applecareOneBaseList.innerHTML = '';
+            applecareOneAdditionalList.innerHTML = '';
+            hybridBaseList.innerHTML = '';
+            hybridIndividualList.innerHTML = '';
+        }
+
+        /**
+         * Populates the individual AppleCare+ breakdown list.
+         * @param {Array} devices - Array of selected devices with monthly plans.
+         * @param {number} totalCost - The total individual monthly cost.
+         */
+        function populateIndividualBreakdown(devices, totalCost) {
+            if (devices.length === 0) {
+                individualList.innerHTML = '<li>No devices selected with monthly AppleCare+ plans.</li>';
+            } else {
+                devices.forEach(device => {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = `${device.model}: $${device.monthly.toFixed(2)}/month`;
+                    individualList.appendChild(listItem);
+                });
+            }
+            individualBreakdownTotal.textContent = `$${totalCost.toFixed(2)}`;
+        }
+
+        /**
+         * Populates the AppleCare One breakdown list.
+         * @param {Array} allSelectedDevices - All selected devices (including those without monthly plans).
+         * @param {number} totalCost - The total AppleCare One cost.
+         */
+        function populateAppleCareOneBreakdown(allSelectedDevices, totalCost) {
+            if (allSelectedDevices.length === 0) {
+                applecareOneBaseList.innerHTML = '<li>No devices selected.</li>';
+                applecareOneAdditionalList.innerHTML = '';
+            } else {
+                // Sort devices by monthly cost (descending), treating null as 0 for sorting
+                const sortedDevices = [...allSelectedDevices].sort((a, b) => (b.monthly || 0) - (a.monthly || 0));
+
+                const baseDevices = sortedDevices.slice(0, 3);
+                const additionalDevices = sortedDevices.slice(3);
+
+                baseDevices.forEach(device => {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = `${device.model}`;
+                    applecareOneBaseList.appendChild(listItem);
+                });
+                if (baseDevices.length === 0) {
+                    applecareOneBaseList.innerHTML = '<li>No devices covered by base.</li>';
+                }
+
+                if (additionalDevices.length === 0) {
+                    applecareOneAdditionalList.innerHTML = '<li>No additional devices.</li>';
+                } else {
+                    additionalDevices.forEach(device => {
+                        const listItem = document.createElement('li');
+                        listItem.textContent = `${device.model}`;
+                        applecareOneAdditionalList.appendChild(listItem);
+                    });
+                }
+            }
+            applecareOneBreakdownTotal.textContent = `$${totalCost.toFixed(2)}`;
+        }
+
+        /**
+         * Populates the Hybrid plan breakdown list.
+         * @param {Array} devicesWithMonthlyPlans - Selected devices with monthly plans.
+         * @param {number} totalCost - The total Hybrid plan cost.
+         */
+        function populateHybridBreakdown(devicesWithMonthlyPlans, totalCost) {
+            if (devicesWithMonthlyPlans.length === 0) {
+                hybridBaseList.innerHTML = '<li>No devices with monthly AppleCare+ plans selected.</li>';
+                hybridIndividualList.innerHTML = '';
+            } else {
+                // Sort devices by monthly cost (descending)
+                const sortedDevices = [...devicesWithMonthlyPlans].sort((a, b) => b.monthly - a.monthly);
+
+                const baseHybridDevices = sortedDevices.slice(0, 3);
+                const individualHybridDevices = sortedDevices.slice(3);
+
+                baseHybridDevices.forEach(device => {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = `${device.model}`;
+                    hybridBaseList.appendChild(listItem);
+                });
+                if (baseHybridDevices.length === 0) {
+                    hybridBaseList.innerHTML = '<li>No devices covered by base.</li>';
+                }
+
+                if (individualHybridDevices.length === 0) {
+                    hybridIndividualList.innerHTML = '<li>No additional devices covered by individual plans.</li>';
+                } else {
+                    individualHybridDevices.forEach(device => {
+                        const listItem = document.createElement('li');
+                        listItem.textContent = `${device.model}: $${device.monthly.toFixed(2)}/month`;
+                        hybridIndividualList.appendChild(listItem);
+                    });
+                }
+            }
+            hybridBreakdownTotal.textContent = `$${totalCost.toFixed(2)}`;
+        }
+
+
+        /**
+         * Calculates the total cost for individual AppleCare+ plans and AppleCare One.
+         * Displays the results and savings message.
+         */
+        function calculateCosts() {
+            clearBestOptionBadges();
+            clearBreakdownLists(); // Clear breakdowns before new calculation
+
+            const selectedCheckboxes = document.querySelectorAll('#device-selection input[type="checkbox"]:checked');
+            let totalIndividualMonthlyCost = 0;
+            let numberOfDevicesSelected = 0;
+            const selectedDevicesWithMonthlyPlan = []; // Devices eligible for monthly individual plans
+            const allSelectedDevices = []; // All selected devices, including those without monthly plans
+
+            selectedCheckboxes.forEach(checkbox => {
+                const device = JSON.parse(checkbox.value);
+                numberOfDevicesSelected++;
+                allSelectedDevices.push(device); // Add to all selected devices
+                if (device.monthly !== null) {
+                    totalIndividualMonthlyCost += device.monthly;
+                    selectedDevicesWithMonthlyPlan.push(device);
+                }
+            });
+
+            // --- Calculate AppleCare One Cost ---
+            let appleCareOneMonthlyCost = 0;
+            if (numberOfDevicesSelected > 0) {
+                appleCareOneMonthlyCost = APPLECARE_ONE_BASE_COST;
+                if (numberOfDevicesSelected > 3) {
+                    appleCareOneMonthlyCost += (numberOfDevicesSelected - 3) * APPLECARE_ONE_ADDITIONAL_DEVICE_COST;
+                }
+            }
+
+            // --- Calculate Hybrid Plan Cost ---
+            let hybridPlanCost = 0;
+            if (selectedDevicesWithMonthlyPlan.length > 0) {
+                // Sort devices by monthly cost in descending order
+                const sortedMonthlyDevices = [...selectedDevicesWithMonthlyPlan].sort((a, b) => b.monthly - a.monthly);
+
+                hybridPlanCost = APPLECARE_ONE_BASE_COST;
+
+                // Add individual costs for devices beyond the first 3
+                for (let i = 3; i < sortedMonthlyDevices.length; i++) {
+                    hybridPlanCost += sortedMonthlyDevices[i].monthly;
+                }
+            }
+
+
+            // Display costs
+            individualCostSpan.textContent = `$${totalIndividualMonthlyCost.toFixed(2)}`;
+            applecareOneCostSpan.textContent = `$${appleCareOneMonthlyCost.toFixed(2)}`;
+            hybridCostSpan.textContent = `$${hybridPlanCost.toFixed(2)}`;
+
+            // Populate breakdown sections
+            populateIndividualBreakdown(selectedDevicesWithMonthlyPlan, totalIndividualMonthlyCost);
+            populateAppleCareOneBreakdown(allSelectedDevices, appleCareOneMonthlyCost);
+            populateHybridBreakdown(selectedDevicesWithMonthlyPlan, hybridPlanCost);
+
+
+            // Determine and display savings
+            let bestCost = Infinity;
+            let bestPlanName = '';
+            let bestPlanBox = null;
+
+            if (numberOfDevicesSelected > 0) {
+                if (totalIndividualMonthlyCost > 0) {
+                    if (totalIndividualMonthlyCost < bestCost) {
+                        bestCost = totalIndividualMonthlyCost;
+                        bestPlanName = 'AppleCare+';
+                        bestPlanBox = individualPlanBox;
+                    }
+                }
+
+                if (appleCareOneMonthlyCost < bestCost) {
+                    bestCost = appleCareOneMonthlyCost;
+                    bestPlanName = 'AppleCare One';
+                    bestPlanBox = applecareOneBox;
+                }
+
+                if (hybridPlanCost < bestCost) {
+                    bestCost = hybridPlanCost;
+                    bestPlanName = 'Hybrid Plan';
+                    bestPlanBox = hybridPlanBox;
+                }
+
+                if (totalIndividualMonthlyCost === 0 && numberOfDevicesSelected > 0) {
+                    if (bestPlanName === 'AppleCare+') {
+                        if (appleCareOneMonthlyCost < hybridPlanCost) {
+                            bestCost = appleCareOneMonthlyCost;
+                            bestPlanName = 'AppleCare One';
+                            bestPlanBox = applecareOneBox;
+                        } else {
+                            bestCost = hybridPlanCost;
+                            bestPlanName = 'Hybrid Plan';
+                            bestPlanBox = hybridPlanBox;
+                        }
+                    }
+                }
+            }
+
+            let savings = 0;
+            let message = '';
+            let messageClass = '';
+            let emoji = '';
+
+            if (numberOfDevicesSelected === 0) {
+                message = 'Please select at least one device to compare plans.';
+                messageClass = 'neutral';
+                emoji = '💡';
+            } else {
+                let maxCost = Math.max(totalIndividualMonthlyCost, appleCareOneMonthlyCost, hybridPlanCost);
+                if (totalIndividualMonthlyCost === 0 && numberOfDevicesSelected > 0) {
+                    maxCost = Math.max(appleCareOneMonthlyCost, hybridPlanCost);
+                }
+
+                if (bestPlanBox) {
+                    addBestOptionBadge(bestPlanBox);
+                }
+
+                if (bestCost === totalIndividualMonthlyCost && bestCost === appleCareOneMonthlyCost && bestCost === hybridPlanCost) {
+                    message = 'All plans cost the same for your selection.';
+                    messageClass = 'neutral';
+                    emoji = '🤝';
+                } else if (bestCost === totalIndividualMonthlyCost && totalIndividualMonthlyCost === appleCareOneMonthlyCost) {
+                    message = 'AppleCare+ and AppleCare One cost the same for your selection.';
+                    messageClass = 'neutral';
+                    emoji = '🤝';
+                } else if (bestCost === totalIndividualMonthlyCost && totalIndividualMonthlyCost === hybridPlanCost) {
+                    message = 'AppleCare+ and the Hybrid Plan cost the same for your selection.';
+                    messageClass = 'neutral';
+                    emoji = '🤝';
+                } else if (bestCost === appleCareOneMonthlyCost && appleCareOneMonthlyCost === hybridPlanCost) {
+                    message = 'AppleCare One and the Hybrid Plan cost the same for your selection.';
+                    messageClass = 'neutral';
+                    emoji = '🤝';
+                } else {
+                    savings = maxCost - bestCost;
+                    message = `🎉 The ${bestPlanName} is the most cost-effective! You save $${savings.toFixed(2)} per month.`;
+                    messageClass = 'positive';
+                    emoji = '✅';
+                }
+
+                if (totalIndividualMonthlyCost === 0 && numberOfDevicesSelected > 0) {
+                    message = 'Individual monthly AppleCare+ is not available for your selected devices. ' + message;
+                    messageClass = 'neutral';
+                    emoji = '🤔';
+                }
+            }
+
+            savingsMessageDiv.textContent = `${emoji} ${message}`;
+            savingsMessageDiv.className = `savings-message ${messageClass}`;
+            resultsDiv.classList.remove('hidden');
+            savingsMessageDiv.classList.remove('hidden');
+            breakdownsSection.classList.remove('hidden'); // Show breakdowns section
+        }
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', () => {
+            renderDeviceSelection();
+            calculateBtn.addEventListener('click', calculateCosts);
+        });
+    </script>
+</body>
+</html>
